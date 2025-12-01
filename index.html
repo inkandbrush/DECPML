@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Submit EMG Reading</title>
+  <style>
+   body {
+    font-family: Arial;
+    padding: 20px;
+    background-image: url('db.png');
+  }
+
+  form {
+    max-width: 500px;
+    margin: auto;
+  }
+
+  /* FIX: identical size for all fields including Safari/macOS */
+  input, select {
+    width: 100%;
+    height: 40px;
+    padding: 0 12px;
+    font-size: 16px;
+    line-height: 50px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    appearance: none;
+    -webkit-appearance: none;
+    margin: 10px 0;
+  }
+
+  /* Custom dropdown arrow */
+  select {
+    background-image: url("data:image/svg+xml;utf8,<svg fill='black' height='24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+  }
+
+  button {
+    background-color: gold;
+    color: black;
+    font-size: 20px;
+	  width: 40%;
+    height: 55px;
+    cursor: pointer;
+    border-radius: 6px;
+  }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: white;
+    padding: 10px 20px;
+    margin-bottom: 30px;
+  }
+  </style>
+</head>
+
+<body style="background-image: url('db.png')">
+<header style="display: flex; justify-content: space-between; align-items: center; background-color: white; padding: 10px 20px; margin-bottom: 30px;">
+    <img src="footer.png" style="height: 80px;">
+    <img src="pml.png" style="height: 60px;">
+    <img src="logo.png" style="height: 60px;">
+</header>
+
+<form id="emgForm">
+    <input type="text" id="DrName" placeholder="Dr. Name" required />
+
+    <select id="Speciality" required>
+      <option value="">Specialty</option>
+      <option value="Gastroenterologist">Gastroenterologist</option>
+      <option value="GI Physiologist">GI Physiologist</option>
+      <option value="Colorectal Surgeon">Colorectal Surgeon</option>
+      <option value="Others">Others</option>
+    </select>
+
+    <input type="text" id="SSMName" placeholder="SSM Name" required />
+
+    <input type="number" id="EMG" placeholder="EMG Reading" required />
+
+    <select id="Region" required>
+      <option value="">Region</option>
+      <option value="Chennai">Chennai</option>
+      <option value="Delhi">Delhi</option>
+      <option value="Mumbai">Mumbai</option>
+      <option value="Banglore">Banglore</option>
+    </select>
+
+    <button type="submit">Submit</button>
+</form>
+
+<script>
+function getISTTimestamp() {
+  const now = new Date();
+  const istOffset = 5.5 * 60 * 60 * 1000;
+  const istTime = new Date(now.getTime() + istOffset);
+
+  const yyyy = istTime.getUTCFullYear();
+  const mm = String(istTime.getUTCMonth() + 1).padStart(2, '0');
+  const dd = String(istTime.getUTCDate()).padStart(2, '0');
+  const hh = String(istTime.getUTCHours()).padStart(2, '0');
+  const min = String(istTime.getUTCMinutes()).padStart(2, '0');
+  const ss = String(istTime.getUTCSeconds()).padStart(2, '0');
+
+  return `${yyyy}-${mm}-${dd} ${hh}:${min}:${ss}`;
+}
+
+document.getElementById("emgForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const data = {
+        DrName: document.getElementById("DrName").value.trim(),
+        Speciality: document.getElementById("Speciality").value,
+        SSMName: document.getElementById("SSMName").value.trim(),
+        EMG: document.getElementById("EMG").value,
+        Region: document.getElementById("Region").value,
+        Timestamp: "'" + getISTTimestamp()   // ⭐ THIS FIXES IT
+    };
+
+    try {
+        const res = await fetch("https://api.sheetbest.com/sheets/c824332c-1621-46af-8b12-eef73ae0185b", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data)
+        });
+
+        if (res.ok) {
+            alert("✅ Data submitted!");
+            document.getElementById("emgForm").reset();
+            window.location.href = "dashboard.html";
+        } else {
+            alert("❌ Submission failed. Status: " + res.status);
+        }
+
+    } catch (err) {
+        alert("⚠️ Error: " + err.message);
+    }
+});
+</script>
+
+
+</body>
+</html>

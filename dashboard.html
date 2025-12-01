@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Precision Muscle League Scoreboard</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    select { margin-bottom: 20px; padding: 10px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
+  </style>
+
+  <meta http-equiv="refresh" content="60">
+</head>
+	
+<body style="background-image: url('db.png')" >
+<header style="display: flex; justify-content: space-between; align-items: center; background-color: white; padding: 10px 20px; margin-bottom: 30px;">
+    <img src="PML.png" style="height: 60px;">
+    <img src="logo.png" style="height: 60px;">
+</header>
+
+<label>Filter by Region:</label>
+<select id="regionFilter">
+    <option value="">-- Region --</option>
+</select>
+
+<button onclick="window.location.href='index.html'"
+style="margin-bottom: 20px; padding: 8px 16px; background-color: white; border: 2px solid red; border-radius: 5px; cursor: pointer;">
+⬅ Back to Form
+</button>
+
+<table id="emgTable" style="background-color: white">
+  <thead>
+    <tr>
+      <th>Sr. No</th>
+      <th>Dr. Name</th>
+      <th>Specialty</th>
+      <th>SSM Name</th>
+      <th>EMG Reading</th>
+      <th>Region</th>
+      <th>Timestamp</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<script>
+const API_URL = "https://api.sheetbest.com/sheets/c824332c-1621-46af-8b12-eef73ae0185b";
+
+async function fetchData() {
+  const res = await fetch(API_URL);
+  const data = await res.json();
+
+  // Sort highest EMG first
+  return data.sort((a, b) => parseFloat(b.Reading || 0) - parseFloat(a.Reading || 0));
+}
+
+function populateRegions(data) {
+  const regionFilter = document.getElementById("regionFilter");
+  const regions = [...new Set(data.map(r => r.Region).filter(r => r))];
+
+  regions.forEach(r => {
+    const opt = document.createElement("option");
+    opt.value = r;
+    opt.textContent = r;
+    regionFilter.appendChild(opt);
+  });
+}
+
+function renderTable(data) {
+  const tbody = document.querySelector("#emgTable tbody");
+  tbody.innerHTML = "";
+
+  data.forEach((row, index) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${index + 1}</td>
+<td>${row.DrName || ""}</td>
+<td>${row.Speciality || ""}</td>
+      <td>${row.SSMName || ""}</td>
+      <td>${row.EMG || ""}</td>
+      <td>${row.Region || ""}</td>
+      <td>${row.Timestamp || ""}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+document.getElementById("regionFilter").addEventListener("change", async function () {
+  const region = this.value;
+  const data = await fetchData();
+  const filtered = region ? data.filter(r => r.Region === region) : data;
+  renderTable(filtered);
+});
+
+async function init() {
+  const data = await fetchData();
+  populateRegions(data);
+  renderTable(data);
+}
+
+init();
+</script>
+
+</body>
+</html>
